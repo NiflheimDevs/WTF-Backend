@@ -1,0 +1,11 @@
+DROP INDEX IF EXISTS idx_audit_log_request;
+DROP TABLE IF EXISTS audit_log;
+DROP TABLE IF EXISTS metrics_daily;
+DROP INDEX IF EXISTS idx_requests_created_at;
+DROP INDEX IF EXISTS idx_requests_region_created;
+DROP INDEX IF EXISTS idx_requests_status_created;
+DROP TABLE IF EXISTS requests;
+DROP INDEX IF EXISTS idx_regions_active;
+DROP TABLE IF EXISTS regions;
+DROP TABLE IF EXISTS users;
+DROP EXTENSION IF EXISTS pgcrypto;

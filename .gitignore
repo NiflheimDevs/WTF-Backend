@@ -1,0 +1,76 @@
+############################
+# OS-SPECIFIC FILES
+############################
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+__MACOSX/
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+.Trash-*
+.fuse_hidden*
+.nfs*
+
+############################
+# GO BUILD FILES
+############################
+
+# Executables (any OS)
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go build cache & temp files
+*.test
+*.out
+
+# Go work/build artifacts
+/go.work
+/go.work.sum
+
+# Go modules
+vendor/
+gomodcache/
+
+# Local environment files
+.env
+*.local
+
+############################
+# EDITOR / IDE
+############################
+
+# JetBrains GoLand
+.idea/
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# Sublime
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+
+############################
+# LOGS & TEMP
+############################
+
+*.log
+*.tmp
+tmp/
+cache/
