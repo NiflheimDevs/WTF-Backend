@@ -74,3 +74,6 @@ gomodcache/
 *.tmp
 tmp/
 cache/
+
+po-tasks.md
+project-plan.md
