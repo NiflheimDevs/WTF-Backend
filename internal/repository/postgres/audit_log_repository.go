@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/uuid"
 	"gitlab.chabokan.net/niflheim/wtf-backend/internal/domain"
 	"gitlab.chabokan.net/niflheim/wtf-backend/internal/repository"
-	"github.com/google/uuid"
 )
 
 // AuditLogRepository implements repository.AuditLogRepository using PostgreSQL

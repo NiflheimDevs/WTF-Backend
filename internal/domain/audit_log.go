@@ -19,10 +19,10 @@ const (
 
 // AuditLog represents an immutable audit trail entry
 type AuditLog struct {
-	ID          int64              `json:"id"`
-	EventType   EventType          `json:"event_type"`
-	RequestID   *uuid.UUID         `json:"request_id,omitempty"`
-	ActorUserID *uuid.UUID         `json:"actor_user_id,omitempty"`
-	Payload     json.RawMessage    `json:"payload"`
-	CreatedAt   time.Time          `json:"created_at"`
+	ID          int64           `json:"id"`
+	EventType   EventType       `json:"event_type"`
+	RequestID   *uuid.UUID      `json:"request_id,omitempty"`
+	ActorUserID *uuid.UUID      `json:"actor_user_id,omitempty"`
+	Payload     json.RawMessage `json:"payload"`
+	CreatedAt   time.Time       `json:"created_at"`
 }

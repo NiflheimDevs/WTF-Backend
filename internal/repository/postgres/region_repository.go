@@ -5,10 +5,10 @@ import (
 	"errors"
 	"fmt"
 
-	"gitlab.chabokan.net/niflheim/wtf-backend/internal/domain"
-	"gitlab.chabokan.net/niflheim/wtf-backend/internal/repository"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"gitlab.chabokan.net/niflheim/wtf-backend/internal/domain"
+	"gitlab.chabokan.net/niflheim/wtf-backend/internal/repository"
 )
 
 // RegionRepository implements repository.RegionRepository using PostgreSQL

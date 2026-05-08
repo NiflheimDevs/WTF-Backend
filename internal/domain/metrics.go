@@ -36,7 +36,7 @@ type RegionMetrics struct {
 
 // NeedTypeMetrics represents metrics by need type
 type NeedTypeMetrics struct {
-	NeedType     NeedType `json:"need_type"`
-	RequestCount int      `json:"request_count"`
-	TotalQuantity int     `json:"total_quantity"`
+	NeedType      NeedType `json:"need_type"`
+	RequestCount  int      `json:"request_count"`
+	TotalQuantity int      `json:"total_quantity"`
 }

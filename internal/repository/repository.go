@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"gitlab.chabokan.net/niflheim/wtf-backend/internal/domain"
 	"github.com/google/uuid"
+	"gitlab.chabokan.net/niflheim/wtf-backend/internal/domain"
 )
 
 // UserRepository defines operations for user data access

@@ -26,19 +26,19 @@ const (
 
 // Request represents a water supply request from a citizen
 type Request struct {
-	ID                uuid.UUID      `json:"id"`
-	RegionID          uuid.UUID      `json:"region_id"`
-	NeedType          NeedType       `json:"need_type"`
-	Quantity          int            `json:"quantity"`
-	ContactPhone      *string        `json:"contact_phone,omitempty"`
-	Note              *string        `json:"note,omitempty"`
-	Status            RequestStatus  `json:"status"`
-	SubmittedIP       *string        `json:"submitted_ip,omitempty"`
+	ID                 uuid.UUID     `json:"id"`
+	RegionID           uuid.UUID     `json:"region_id"`
+	NeedType           NeedType      `json:"need_type"`
+	Quantity           int           `json:"quantity"`
+	ContactPhone       *string       `json:"contact_phone,omitempty"`
+	Note               *string       `json:"note,omitempty"`
+	Status             RequestStatus `json:"status"`
+	SubmittedIP        *string       `json:"submitted_ip,omitempty"`
 	SubmittedUserAgent *string       `json:"submitted_user_agent,omitempty"`
-	DispatchedBy      *uuid.UUID     `json:"dispatched_by,omitempty"`
-	DispatchedAt      *time.Time     `json:"dispatched_at,omitempty"`
-	CreatedAt         time.Time      `json:"created_at"`
-	UpdatedAt         time.Time      `json:"updated_at"`
+	DispatchedBy       *uuid.UUID    `json:"dispatched_by,omitempty"`
+	DispatchedAt       *time.Time    `json:"dispatched_at,omitempty"`
+	CreatedAt          time.Time     `json:"created_at"`
+	UpdatedAt          time.Time     `json:"updated_at"`
 }
 
 // IsPending checks if request is in pending status

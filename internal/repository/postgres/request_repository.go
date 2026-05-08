@@ -4,13 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
-	"gitlab.chabokan.net/niflheim/wtf-backend/internal/domain"
-	"gitlab.chabokan.net/niflheim/wtf-backend/internal/repository"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"gitlab.chabokan.net/niflheim/wtf-backend/internal/domain"
+	"gitlab.chabokan.net/niflheim/wtf-backend/internal/repository"
 )
 
 // RequestRepository implements repository.RequestRepository using PostgreSQL
