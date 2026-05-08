@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"gitlab.chabokan.net/niflheim/wtf-backend/internal/domain"
+	"gitlab.chabokan.net/niflheim/wtf-backend/internal/queue"
 	"gitlab.chabokan.net/niflheim/wtf-backend/internal/repository"
 )
 
@@ -38,13 +39,25 @@ type RequestService struct {
 	requests repository.RequestRepository
 	regions  repository.RegionRepository
 	audit    repository.AuditLogRepository
+	queue    *queue.Client
 }
 
-func NewRequestService(requests repository.RequestRepository, regions repository.RegionRepository, audit repository.AuditLogRepository) *RequestService {
-	return &RequestService{requests: requests, regions: regions, audit: audit}
+func NewRequestService(
+	requests repository.RequestRepository,
+	regions repository.RegionRepository,
+	audit repository.AuditLogRepository,
+	queue *queue.Client,
+) *RequestService {
+	return &RequestService{
+		requests: requests,
+		regions:  regions,
+		audit:    audit,
+		queue:    queue,
+	}
 }
 
 func (s *RequestService) Create(ctx context.Context, input CreateRequestInput) (*domain.Request, error) {
+	// Validate region exists
 	if _, err := s.regions.FindByID(ctx, input.RegionID); err != nil {
 		return nil, fmt.Errorf("%w: region", ErrNotFound)
 	}
@@ -64,15 +77,42 @@ func (s *RequestService) Create(ctx context.Context, input CreateRequestInput) (
 		UpdatedAt:          now,
 	}
 
+	// Create request in database
 	if err := s.requests.Create(ctx, req); err != nil {
 		return nil, err
 	}
 
+	// Insert audit log
 	_ = s.insertAudit(ctx, domain.EventRequestSubmitted, &req.ID, nil, map[string]any{
 		"region_id": req.RegionID,
 		"need_type": req.NeedType,
 		"quantity":  req.Quantity,
 	})
+
+	// Enqueue background jobs asynchronously
+	// Note: In a production system with transactional guarantees, you would use
+	// InsertTx within a database transaction. For now, we enqueue after the request is created.
+	go func() {
+		bgCtx := context.Background()
+		
+		// Enqueue dispatcher notification job
+		if err := s.queue.EnqueueNotifyDispatcher(bgCtx, queue.NotifyDispatcherJobArgs{
+			RequestID: req.ID,
+			RegionID:  req.RegionID,
+		}); err != nil {
+			// Log error but don't fail the request creation
+			// In production, you'd want proper error tracking here
+			fmt.Printf("failed to enqueue notify dispatcher job: %v\n", err)
+		}
+
+		// Enqueue metrics refresh job
+		if err := s.queue.EnqueueRefreshMetrics(bgCtx, queue.RefreshMetricsJobArgs{
+			Date:     now,
+			RegionID: req.RegionID,
+		}); err != nil {
+			fmt.Printf("failed to enqueue refresh metrics job: %v\n", err)
+		}
+	}()
 
 	return req, nil
 }
@@ -141,6 +181,17 @@ func (s *RequestService) UpdateStatus(ctx context.Context, id uuid.UUID, status 
 		"from": req.Status,
 		"to":   status,
 	})
+
+	// Enqueue metrics refresh when status changes
+	go func() {
+		bgCtx := context.Background()
+		if err := s.queue.EnqueueRefreshMetrics(bgCtx, queue.RefreshMetricsJobArgs{
+			Date:     time.Now(),
+			RegionID: req.RegionID,
+		}); err != nil {
+			fmt.Printf("failed to enqueue refresh metrics job: %v\n", err)
+		}
+	}()
 
 	updated, err := s.requests.FindByID(ctx, id)
 	if err != nil {
