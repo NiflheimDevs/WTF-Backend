@@ -4,6 +4,7 @@ APP_NAME ?= wtf-backend
 BIN_DIR ?= bin
 API_ENTRYPOINT := ./cmd/api
 WORKER_ENTRYPOINT := ./cmd/worker
+DATABASE_URL := "postgresql://postgres:123456@localhost:5432/WTF"
 
 help:
 	@echo "Available targets:"
@@ -19,6 +20,12 @@ api:
 
 worker:
 	go run $(WORKER_ENTRYPOINT)
+
+river:
+	go install github.com/riverqueue/river/cmd/river@latest
+
+	river migrate up \
+	--database-url $(DATABASE_URL)
 
 build:
 	mkdir -p $(BIN_DIR)
