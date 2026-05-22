@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net"
 	"strings"
 	"time"
 
@@ -19,7 +20,7 @@ type CreateRequestInput struct {
 	Quantity           int
 	ContactPhone       *string
 	Note               *string
-	SubmittedIP        *string
+	SubmittedIP        *net.IPNet
 	SubmittedUserAgent *string
 }
 

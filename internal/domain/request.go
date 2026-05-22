@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"net"
 	"time"
 
 	"github.com/google/uuid"
@@ -33,7 +34,7 @@ type Request struct {
 	ContactPhone       *string       `json:"contact_phone,omitempty"`
 	Note               *string       `json:"note,omitempty"`
 	Status             RequestStatus `json:"status"`
-	SubmittedIP        *string       `json:"submitted_ip,omitempty"`
+	SubmittedIP        *net.IPNet    `json:"submitted_ip,omitempty"`
 	SubmittedUserAgent *string       `json:"submitted_user_agent,omitempty"`
 	DispatchedBy       *uuid.UUID    `json:"dispatched_by,omitempty"`
 	DispatchedAt       *time.Time    `json:"dispatched_at,omitempty"`

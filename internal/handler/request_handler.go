@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"net/http"
 	"strconv"
@@ -68,7 +69,12 @@ func (h *RequestHandler) Create(w http.ResponseWriter, r *http.Request) {
 	contactPhone := optionalString(body.ContactPhone)
 	note := optionalString(body.Note)
 	userAgent := optionalString(r.UserAgent())
-	ip := optionalString(clientIP(r))
+	ip, err := clientIP(r)
+
+	if err != nil {
+		WriteError(w, http.StatusBadRequest, "bad_host", "", nil)
+		return
+	}
 
 	req, err := h.requests.Create(r.Context(), service.CreateRequestInput{
 		RegionID:           regionID,
@@ -237,15 +243,32 @@ func optionalString(value string) *string {
 	return &trimmed
 }
 
-func clientIP(r *http.Request) string {
+func clientIP(r *http.Request) (*net.IPNet, error) {
+	var ipStr string
 	if forwarded := r.Header.Get("X-Forwarded-For"); forwarded != "" {
-		return strings.TrimSpace(strings.Split(forwarded, ",")[0])
+		ipStr = strings.TrimSpace(strings.Split(forwarded, ",")[0])
+	} else {
+		host, _, err := net.SplitHostPort(r.RemoteAddr)
+		if err != nil {
+			ipStr = r.RemoteAddr
+		} else {
+			ipStr = host
+		}
 	}
-	host, _, err := net.SplitHostPort(r.RemoteAddr)
-	if err != nil {
-		return r.RemoteAddr
+
+	// Add /32 for IPv4 or /128 for IPv6
+	ip := net.ParseIP(ipStr)
+	if ip == nil {
+		return nil, fmt.Errorf("invalid IP: %s", ipStr)
 	}
-	return host
+
+	cidr := ipStr + "/32"
+	if ip.To4() == nil {
+		cidr = ipStr + "/128"
+	}
+
+	_, ipNet, err := net.ParseCIDR(cidr)
+	return ipNet, err
 }
 
 func parsePositiveInt(raw string, fallback int) int {
