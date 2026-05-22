@@ -5,6 +5,8 @@ import (
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -18,14 +20,16 @@ type Config struct {
 }
 
 func Load() (Config, error) {
+	_ = godotenv.Load()
+
 	cfg := Config{
 		AppEnv:            getEnv("APP_ENV", "development"),
 		Port:              getEnv("PORT", "8080"),
 		DatabaseURL:       os.Getenv("DATABASE_URL"),
 		JWTSecret:         os.Getenv("JWT_SECRET"),
-		FrontendOrigin:    os.Getenv("FRONTEND_ORIGIN"),
+		FrontendOrigin:    getEnv("FRONTEND_ORIGIN", "http://localhost:3000"),
 		RequestsPerMinute: getEnvInt("REQUESTS_PER_MINUTE", 10),
-		JWTTTL:            8 * time.Hour,
+		JWTTTL:            getEnvDuration("JWT_TTL", 8*time.Hour),
 	}
 
 	if cfg.DatabaseURL == "" {
@@ -54,5 +58,19 @@ func getEnvInt(key string, fallback int) int {
 	if err != nil {
 		return fallback
 	}
+	return parsed
+}
+
+func getEnvDuration(key string, fallback time.Duration) time.Duration {
+	value := os.Getenv(key)
+	if value == "" {
+		return fallback
+	}
+
+	parsed, err := time.ParseDuration(value)
+	if err != nil {
+		return fallback
+	}
+
 	return parsed
 }

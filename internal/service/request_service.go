@@ -94,7 +94,7 @@ func (s *RequestService) Create(ctx context.Context, input CreateRequestInput) (
 	// InsertTx within a database transaction. For now, we enqueue after the request is created.
 	go func() {
 		bgCtx := context.Background()
-		
+
 		// Enqueue dispatcher notification job
 		if err := s.queue.EnqueueNotifyDispatcher(bgCtx, queue.NotifyDispatcherJobArgs{
 			RequestID: req.ID,

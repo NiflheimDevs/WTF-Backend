@@ -2,17 +2,16 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"github.com/riverqueue/river"
 	"gitlab.chabokan.net/niflheim/wtf-backend/internal/config"
 	"gitlab.chabokan.net/niflheim/wtf-backend/internal/queue"
 	"gitlab.chabokan.net/niflheim/wtf-backend/internal/repository/postgres"
-	"github.com/riverqueue/river"
 )
 
 func main() {

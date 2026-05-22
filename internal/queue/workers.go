@@ -7,10 +7,10 @@ import (
 	"log/slog"
 	"time"
 
-	"gitlab.chabokan.net/niflheim/wtf-backend/internal/domain"
-	"gitlab.chabokan.net/niflheim/wtf-backend/internal/repository"
 	"github.com/google/uuid"
 	"github.com/riverqueue/river"
+	"gitlab.chabokan.net/niflheim/wtf-backend/internal/domain"
+	"gitlab.chabokan.net/niflheim/wtf-backend/internal/repository"
 )
 
 // NotifyDispatcherWorker handles dispatcher notification jobs
@@ -139,7 +139,7 @@ func (w *RefreshMetricsWorker) refreshMetricsForNeedType(
 		FromDate: &startOfDay,
 		ToDate:   &endOfDay,
 	}
-	
+
 	// Get all requests to filter by need type and calculate metrics
 	requests, err := w.requestRepo.List(ctx, totalFilters)
 	if err != nil {
@@ -156,7 +156,7 @@ func (w *RefreshMetricsWorker) refreshMetricsForNeedType(
 		if req.NeedType == needType {
 			totalCount++
 			totalQuantity += req.Quantity
-			
+
 			switch req.Status {
 			case domain.StatusPending:
 				pendingCount++

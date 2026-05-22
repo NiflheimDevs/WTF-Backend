@@ -1,7 +1,6 @@
 package queue
 
 import (
-	"context"
 	"encoding/json"
 	"time"
 
@@ -50,7 +49,7 @@ func (args *NotifyDispatcherJobArgs) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &temp); err != nil {
 		return err
 	}
-	
+
 	requestID, err := uuid.Parse(temp.RequestID)
 	if err != nil {
 		return err
@@ -59,7 +58,7 @@ func (args *NotifyDispatcherJobArgs) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
-	
+
 	args.RequestID = requestID
 	args.RegionID = regionID
 	return nil
@@ -85,7 +84,7 @@ func (args *RefreshMetricsJobArgs) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &temp); err != nil {
 		return err
 	}
-	
+
 	date, err := time.Parse(time.RFC3339, temp.Date)
 	if err != nil {
 		return err
@@ -94,7 +93,7 @@ func (args *RefreshMetricsJobArgs) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
-	
+
 	args.Date = date
 	args.RegionID = regionID
 	return nil
