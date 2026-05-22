@@ -15,6 +15,7 @@ type Config struct {
 	FrontendOrigin    string
 	RequestsPerMinute int
 	JWTTTL            time.Duration
+	EnableWorkers     bool // New: control whether to start background workers
 }
 
 func Load() (Config, error) {
@@ -26,6 +27,7 @@ func Load() (Config, error) {
 		FrontendOrigin:    os.Getenv("FRONTEND_ORIGIN"),
 		RequestsPerMinute: getEnvInt("REQUESTS_PER_MINUTE", 10),
 		JWTTTL:            8 * time.Hour,
+		EnableWorkers:     getEnvBool("ENABLE_WORKERS", true), // Default: enabled
 	}
 
 	if cfg.DatabaseURL == "" {
@@ -51,6 +53,18 @@ func getEnvInt(key string, fallback int) int {
 		return fallback
 	}
 	parsed, err := strconv.Atoi(value)
+	if err != nil {
+		return fallback
+	}
+	return parsed
+}
+
+func getEnvBool(key string, fallback bool) bool {
+	value := os.Getenv(key)
+	if value == "" {
+		return fallback
+	}
+	parsed, err := strconv.ParseBool(value)
 	if err != nil {
 		return fallback
 	}
