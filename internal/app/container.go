@@ -13,12 +13,13 @@ import (
 )
 
 type Container struct {
-	DB       *postgres.DB
-	Queue    *queue.Client
-	Auth     *service.AuthService
-	Regions  *service.RegionService
-	Requests *service.RequestService
-	Metrics  *service.MetricsService
+	DB            *postgres.DB
+	Queue         *queue.Client
+	Auth          *service.AuthService
+	Regions       *service.RegionService
+	Requests      *service.RequestService
+	Metrics       *service.MetricsService
+	workersEnabled bool
 }
 
 func NewContainer(ctx context.Context, cfg config.Config) (*Container, error) {
@@ -52,23 +53,29 @@ func NewContainer(ctx context.Context, cfg config.Config) (*Container, error) {
 		return nil, fmt.Errorf("create queue client: %w", err)
 	}
 
-	// Start queue processing
-	if err := queueClient.Start(ctx); err != nil {
-		return nil, fmt.Errorf("start queue client: %w", err)
+	// Conditionally start queue processing based on config
+	if cfg.EnableWorkers {
+		if err := queueClient.Start(ctx); err != nil {
+			return nil, fmt.Errorf("start queue client: %w", err)
+		}
+		logger.Info("background workers enabled and started")
+	} else {
+		logger.Info("background workers disabled (ENABLE_WORKERS=false)")
 	}
 
 	return &Container{
-		DB:       db,
-		Queue:    queueClient,
-		Auth:     service.NewAuthService(users, cfg.JWTSecret, cfg.JWTTTL),
-		Regions:  service.NewRegionService(regions),
-		Requests: service.NewRequestService(requests, regions, audit, queueClient),
-		Metrics:  service.NewMetricsService(metrics),
+		DB:             db,
+		Queue:          queueClient,
+		Auth:           service.NewAuthService(users, cfg.JWTSecret, cfg.JWTTTL),
+		Regions:        service.NewRegionService(regions),
+		Requests:       service.NewRequestService(requests, regions, audit, queueClient),
+		Metrics:        service.NewMetricsService(metrics),
+		workersEnabled: cfg.EnableWorkers,
 	}, nil
 }
 
 func (c *Container) Close() {
-	if c.Queue != nil {
+	if c.Queue != nil && c.workersEnabled {
 		ctx := context.Background()
 		_ = c.Queue.Stop(ctx)
 	}
