@@ -1,0 +1,744 @@
+openapi: 3.0.3
+info:
+  title: WTF Backend API
+  version: 1.0.0
+  description: API documentation generated from the Go chi router and HTTP handlers.
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+tags:
+  - name: Health
+    description: Application liveness and readiness checks.
+  - name: Regions
+    description: Public region lookup endpoints.
+  - name: Requests
+    description: Citizen water supply request endpoints.
+  - name: Auth
+    description: Dispatcher authentication endpoints.
+  - name: Dispatcher
+    description: Authenticated dispatcher request management endpoints.
+  - name: Metrics
+    description: Authenticated dispatcher metrics endpoints.
+paths:
+  /api/v1/health:
+    get:
+      tags:
+        - Health
+      summary: Liveness check
+      operationId: getHealth
+      responses:
+        "200":
+          description: API process is running.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+              example:
+                status: ok
+  /api/v1/health/ready:
+    get:
+      tags:
+        - Health
+      summary: Readiness check
+      operationId: getReadiness
+      responses:
+        "200":
+          description: API and database are ready.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+              example:
+                status: ready
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /api/v1/regions:
+    get:
+      tags:
+        - Regions
+      summary: List active regions
+      operationId: listRegions
+      responses:
+        "200":
+          description: Active regions ordered by the backend repository.
+          headers:
+            Cache-Control:
+              description: Public cache directive set by the handler.
+              schema:
+                type: string
+              example: public, max-age=300
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Region"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /api/v1/requests:
+    post:
+      tags:
+        - Requests
+      summary: Create a public water supply request
+      operationId: createRequest
+      description: Creates a citizen request. This endpoint is rate limited by server configuration.
+      parameters:
+        - name: X-Forwarded-For
+          in: header
+          required: false
+          description: Optional client IP header used when present.
+          schema:
+            type: string
+            example: 203.0.113.10
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRequestBody"
+            example:
+              region_id: 4b5b6e3f-9ad1-44b8-870c-2c6fd4b6d19e
+              need_type: bottled_water
+              quantity: 12
+              contact_phone: "+989121234567"
+              note: Family of four needs drinking water.
+      responses:
+        "201":
+          description: Request created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateRequestResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /api/v1/auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Login dispatcher or admin user
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+            example:
+              email: dispatcher@example.com
+              password: secret-password
+      responses:
+        "200":
+          description: Authentication succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/v1/dispatcher/requests:
+    get:
+      tags:
+        - Dispatcher
+      summary: List requests for dispatchers
+      operationId: listDispatcherRequests
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/StatusFilter"
+        - $ref: "#/components/parameters/RegionIdFilter"
+        - $ref: "#/components/parameters/FromDateFilter"
+        - $ref: "#/components/parameters/ToDateFilter"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Paginated requests.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RequestListResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /api/v1/dispatcher/requests/{id}:
+    get:
+      tags:
+        - Dispatcher
+      summary: Get request detail
+      operationId: getDispatcherRequest
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+      responses:
+        "200":
+          description: Request detail with audit log entries.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RequestDetail"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /api/v1/dispatcher/requests/{id}/status:
+    patch:
+      tags:
+        - Dispatcher
+      summary: Update request status
+      operationId: updateDispatcherRequestStatus
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/RequestId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateStatusBody"
+            example:
+              status: dispatched
+      responses:
+        "200":
+          description: Updated request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Request"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /api/v1/dispatcher/metrics/summary:
+    get:
+      tags:
+        - Metrics
+      summary: Get summary metrics
+      operationId: getMetricsSummary
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Overall request metrics.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MetricsSummary"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /api/v1/dispatcher/metrics/by-region:
+    get:
+      tags:
+        - Metrics
+      summary: Get request metrics by region
+      operationId: getMetricsByRegion
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of regions to return. Defaults to 10.
+          schema:
+            type: integer
+            minimum: 1
+            default: 10
+      responses:
+        "200":
+          description: Region metrics.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RegionMetrics"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /api/v1/dispatcher/metrics/by-need-type:
+    get:
+      tags:
+        - Metrics
+      summary: Get request metrics by need type
+      operationId: getMetricsByNeedType
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Need type metrics.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NeedTypeMetrics"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    RequestId:
+      name: id
+      in: path
+      required: true
+      description: Request UUID.
+      schema:
+        type: string
+        format: uuid
+    StatusFilter:
+      name: status
+      in: query
+      required: false
+      description: Filter by request status.
+      schema:
+        $ref: "#/components/schemas/RequestStatus"
+    RegionIdFilter:
+      name: region_id
+      in: query
+      required: false
+      description: Filter by region UUID.
+      schema:
+        type: string
+        format: uuid
+    FromDateFilter:
+      name: from
+      in: query
+      required: false
+      description: Include requests created at or after this RFC3339 timestamp.
+      schema:
+        type: string
+        format: date-time
+    ToDateFilter:
+      name: to
+      in: query
+      required: false
+      description: Include requests created at or before this RFC3339 timestamp.
+      schema:
+        type: string
+        format: date-time
+    Page:
+      name: page
+      in: query
+      required: false
+      description: Page number. Invalid or missing values default to 1.
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PageSize:
+      name: page_size
+      in: query
+      required: false
+      description: Page size. Invalid or missing values default to 20; values above 100 are capped at 100.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+  responses:
+    BadRequest:
+      description: Request is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    Unauthorized:
+      description: Authentication is required or token is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    Forbidden:
+      description: Authenticated user is not allowed to perform the action.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    NotFound:
+      description: Resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    Conflict:
+      description: Request conflicts with current resource state.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    InternalServerError:
+      description: Unexpected server error.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+    ServiceUnavailable:
+      description: Service is not ready.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+  schemas:
+    HealthStatus:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          example: ok
+    LoginRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+    LoginResult:
+      type: object
+      required:
+        - access_token
+        - expires_at
+        - user
+      properties:
+        access_token:
+          type: string
+        expires_at:
+          type: string
+          format: date-time
+        user:
+          $ref: "#/components/schemas/User"
+    User:
+      type: object
+      required:
+        - id
+        - email
+        - full_name
+        - role
+        - is_active
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        full_name:
+          type: string
+        role:
+          $ref: "#/components/schemas/Role"
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    Role:
+      type: string
+      enum:
+        - dispatcher
+        - admin
+    Region:
+      type: object
+      required:
+        - id
+        - name_fa
+        - name_en
+        - is_active
+        - display_order
+      properties:
+        id:
+          type: string
+          format: uuid
+        name_fa:
+          type: string
+        name_en:
+          type: string
+        parent_id:
+          type: string
+          format: uuid
+          nullable: true
+        is_active:
+          type: boolean
+        display_order:
+          type: integer
+    CreateRequestBody:
+      type: object
+      additionalProperties: false
+      required:
+        - region_id
+        - need_type
+        - quantity
+      properties:
+        region_id:
+          type: string
+          format: uuid
+        need_type:
+          $ref: "#/components/schemas/NeedType"
+        quantity:
+          type: integer
+          minimum: 1
+        contact_phone:
+          type: string
+        note:
+          type: string
+          maxLength: 500
+    CreateRequestResponse:
+      type: object
+      required:
+        - id
+        - status
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          $ref: "#/components/schemas/RequestStatus"
+        created_at:
+          type: string
+          format: date-time
+    UpdateStatusBody:
+      type: object
+      additionalProperties: false
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum:
+            - dispatched
+            - fulfilled
+            - cancelled
+    RequestListResult:
+      type: object
+      required:
+        - requests
+        - total
+        - page
+        - page_size
+      properties:
+        requests:
+          type: array
+          items:
+            $ref: "#/components/schemas/Request"
+        total:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+    RequestDetail:
+      type: object
+      required:
+        - request
+        - audit_log
+      properties:
+        request:
+          $ref: "#/components/schemas/Request"
+        audit_log:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditLog"
+    Request:
+      type: object
+      required:
+        - id
+        - region_id
+        - need_type
+        - quantity
+        - status
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        region_id:
+          type: string
+          format: uuid
+        need_type:
+          $ref: "#/components/schemas/NeedType"
+        quantity:
+          type: integer
+        contact_phone:
+          type: string
+          nullable: true
+        note:
+          type: string
+          nullable: true
+        status:
+          $ref: "#/components/schemas/RequestStatus"
+        submitted_ip:
+          type: string
+          nullable: true
+          description: CIDR representation of submitted IP as encoded by Go's net.IPNet.
+          example: 203.0.113.10/32
+        submitted_user_agent:
+          type: string
+          nullable: true
+        dispatched_by:
+          type: string
+          format: uuid
+          nullable: true
+        dispatched_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    NeedType:
+      type: string
+      enum:
+        - bottled_water
+        - tanker
+    RequestStatus:
+      type: string
+      enum:
+        - pending
+        - dispatched
+        - fulfilled
+        - cancelled
+    AuditLog:
+      type: object
+      required:
+        - id
+        - event_type
+        - payload
+        - created_at
+      properties:
+        id:
+          type: integer
+          format: int64
+        event_type:
+          $ref: "#/components/schemas/EventType"
+        request_id:
+          type: string
+          format: uuid
+          nullable: true
+        actor_user_id:
+          type: string
+          format: uuid
+          nullable: true
+        payload:
+          type: object
+          additionalProperties: true
+        created_at:
+          type: string
+          format: date-time
+    EventType:
+      type: string
+      enum:
+        - request_submitted
+        - request_status_changed
+        - dispatcher_notified
+        - metrics_refreshed
+    MetricsSummary:
+      type: object
+      required:
+        - total_requests
+        - pending_requests
+        - dispatched_requests
+        - fulfilled_requests
+      properties:
+        total_requests:
+          type: integer
+        pending_requests:
+          type: integer
+        dispatched_requests:
+          type: integer
+        fulfilled_requests:
+          type: integer
+    RegionMetrics:
+      type: object
+      required:
+        - region_id
+        - region_name_fa
+        - region_name_en
+        - request_count
+      properties:
+        region_id:
+          type: string
+          format: uuid
+        region_name_fa:
+          type: string
+        region_name_en:
+          type: string
+        request_count:
+          type: integer
+    NeedTypeMetrics:
+      type: object
+      required:
+        - need_type
+        - request_count
+        - total_quantity
+      properties:
+        need_type:
+          $ref: "#/components/schemas/NeedType"
+        request_count:
+          type: integer
+        total_quantity:
+          type: integer
+    ErrorEnvelope:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          $ref: "#/components/schemas/ErrorBody"
+    ErrorBody:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
