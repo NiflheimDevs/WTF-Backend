@@ -33,6 +33,7 @@ type RequestListResult struct {
 
 type RequestDetail struct {
 	Request  *domain.Request    `json:"request"`
+	Region   *domain.Region     `json:"region"`
 	AuditLog []*domain.AuditLog `json:"audit_log"`
 }
 
@@ -151,12 +152,17 @@ func (s *RequestService) Detail(ctx context.Context, id uuid.UUID) (*RequestDeta
 		return nil, fmt.Errorf("%w: request", ErrNotFound)
 	}
 
+	region, err := s.regions.FindByID(ctx, req.RegionID)
+	if err != nil {
+		return nil, fmt.Errorf("%w: region", ErrNotFound)
+	}
+
 	logs, err := s.audit.ListByRequestID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	return &RequestDetail{Request: req, AuditLog: logs}, nil
+	return &RequestDetail{Request: req, Region: region, AuditLog: logs}, nil
 }
 
 func (s *RequestService) UpdateStatus(ctx context.Context, id uuid.UUID, status domain.RequestStatus, actorID uuid.UUID) (*domain.Request, error) {

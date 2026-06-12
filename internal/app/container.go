@@ -13,12 +13,12 @@ import (
 )
 
 type Container struct {
-	DB            *postgres.DB
-	Queue         *queue.Client
-	Auth          *service.AuthService
-	Regions       *service.RegionService
-	Requests      *service.RequestService
-	Metrics       *service.MetricsService
+	DB             *postgres.DB
+	Queue          *queue.Client
+	Auth           *service.AuthService
+	Regions        *service.RegionService
+	Requests       *service.RequestService
+	Metrics        *service.MetricsService
 	workersEnabled bool
 }
 
