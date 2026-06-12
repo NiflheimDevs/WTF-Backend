@@ -33,31 +33,31 @@ unit_tests:
     - go test -v ./...
 
 # 3. Build Stage: Compiles the binary (amd64 for your server)
-build_binary:
-  stage: build
-  script:
-    - mkdir -p bin/
-    - CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o bin/$APP_NAME ./cmd/api
-  artifacts:
-    paths:
-      - bin/
-    expire_in: 1 hour
+# build_binary:
+#   stage: build
+#   script:
+#     - mkdir -p bin/
+#     - CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o bin/$APP_NAME ./cmd/api
+#   artifacts:
+#     paths:
+#       - bin/
+#     expire_in: 1 hour
 
-# 4. Package Stage: Builds the Docker image and pushes to GitLab Registry
-build_docker:
-  stage: package
-  image: docker:latest
-  services:
-    - docker:dind
-  variables:
-    DOCKER_TLS_CERTDIR: "/certs"
-  before_script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-  script:
-    # Use buildx to ensure the image manifest is amd64 even if runner is arm64
-    - docker build --platform linux/amd64 -t $DOCKER_IMAGE .
-    - docker push $DOCKER_IMAGE
-  only:
-    - main
-    - master
-    - tags
+# # 4. Package Stage: Builds the Docker image and pushes to GitLab Registry
+# build_docker:
+#   stage: package
+#   image: docker:latest
+#   services:
+#     - docker:dind
+#   variables:
+#     DOCKER_TLS_CERTDIR: "/certs"
+#   before_script:
+#     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+#   script:
+#     # Use buildx to ensure the image manifest is amd64 even if runner is arm64
+#     - docker build --platform linux/amd64 -t $DOCKER_IMAGE .
+#     - docker push $DOCKER_IMAGE
+#   only:
+#     - main
+#     - master
+#     - tags
