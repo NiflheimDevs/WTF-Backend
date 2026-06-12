@@ -1,0 +1,14 @@
+FROM node:22-alpine AS builder
+
+WORKDIR /app
+
+COPY openapi.yaml .
+
+RUN npm install -g redoc-cli
+RUN redoc-cli build openapi.yaml -o index.html
+
+FROM nginx:alpine
+
+COPY --from=builder /app/index.html /usr/share/nginx/html/index.html
+
+EXPOSE 80
