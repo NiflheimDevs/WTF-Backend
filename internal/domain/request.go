@@ -29,6 +29,8 @@ const (
 type Request struct {
 	ID                 uuid.UUID     `json:"id"`
 	RegionID           uuid.UUID     `json:"region_id"`
+	RegionNameFa       string        `json:"region_name_fa,omitempty"`
+	RegionNameEn       string        `json:"region_name_en,omitempty"`
 	NeedType           NeedType      `json:"need_type"`
 	Quantity           int           `json:"quantity"`
 	ContactPhone       *string       `json:"contact_phone,omitempty"`

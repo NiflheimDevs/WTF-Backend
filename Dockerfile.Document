@@ -2,7 +2,7 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-COPY openapi.yaml .
+COPY ./API-Document/openapi.yaml .
 
 RUN npm install -g redoc-cli
 RUN redoc-cli build openapi.yaml -o index.html

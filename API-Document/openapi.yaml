@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: WTF Backend API
-  version: 1.0.1
+  version: 1.0.2
   description: API documentation generated from the Go chi router and HTTP handlers.
 servers:
   - url: http://localhost:8080
@@ -571,13 +571,10 @@ components:
       type: object
       required:
         - request
-        - region
         - audit_log
       properties:
         request:
           $ref: "#/components/schemas/Request"
-        region:
-          $ref: "#/components/schemas/Region"
         audit_log:
           type: array
           items:
@@ -587,6 +584,8 @@ components:
       required:
         - id
         - region_id
+        - region_name_fa
+        - region_name_en
         - need_type
         - quantity
         - status
@@ -599,6 +598,10 @@ components:
         region_id:
           type: string
           format: uuid
+        region_name_fa:
+          type: string
+        region_name_en:
+          type: string
         need_type:
           $ref: "#/components/schemas/NeedType"
         quantity:
