@@ -75,3 +75,21 @@ func (c *Client) EnqueueRefreshMetricsTx(ctx context.Context, tx pgx.Tx, args Re
 	}
 	return nil
 }
+
+// EnqueueSendRequesterSMS enqueues a requester SMS notification job
+func (c *Client) EnqueueSendRequesterSMS(ctx context.Context, args SendRequesterSMSJobArgs) error {
+	_, err := c.river.Insert(ctx, args, nil)
+	if err != nil {
+		return fmt.Errorf("failed to enqueue requester SMS job: %w", err)
+	}
+	return nil
+}
+
+// EnqueueSendRequesterSMSTx enqueues a requester SMS notification job within a transaction
+func (c *Client) EnqueueSendRequesterSMSTx(ctx context.Context, tx pgx.Tx, args SendRequesterSMSJobArgs) error {
+	_, err := c.river.InsertTx(ctx, tx, args, nil)
+	if err != nil {
+		return fmt.Errorf("failed to enqueue requester SMS job in tx: %w", err)
+	}
+	return nil
+}

@@ -192,6 +192,16 @@ func (s *RequestService) UpdateStatus(ctx context.Context, id uuid.UUID, status 
 		}); err != nil {
 			fmt.Printf("failed to enqueue refresh metrics job: %v\n", err)
 		}
+
+		if req.ContactPhone != nil {
+			if err := s.queue.EnqueueSendRequesterSMS(bgCtx, queue.SendRequesterSMSJobArgs{
+				RequestID: req.ID,
+				Phone:     *req.ContactPhone,
+				Status:    string(status),
+			}); err != nil {
+				fmt.Printf("failed to enqueue requester SMS job: %v\n", err)
+			}
+		}
 	}()
 
 	updated, err := s.requests.FindByID(ctx, id)

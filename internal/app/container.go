@@ -40,11 +40,13 @@ func NewContainer(ctx context.Context, cfg config.Config) (*Container, error) {
 
 	// Create workers for queue
 	notifyWorker := queue.NewNotifyDispatcherWorker(audit, logger)
+	requesterSMSWorker := queue.NewSendRequesterSMSWorker(audit, logger)
 	metricsWorker := queue.NewRefreshMetricsWorker(requests, metrics, logger)
 
 	// Register workers with River
 	workers := river.NewWorkers()
 	river.AddWorker(workers, notifyWorker)
+	river.AddWorker(workers, requesterSMSWorker)
 	river.AddWorker(workers, metricsWorker)
 
 	// Create queue client

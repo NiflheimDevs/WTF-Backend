@@ -14,6 +14,7 @@ const (
 	EventRequestSubmitted     EventType = "request_submitted"
 	EventRequestStatusChanged EventType = "request_status_changed"
 	EventDispatcherNotified   EventType = "dispatcher_notified"
+	EventRequesterSMSSent     EventType = "requester_sms_sent"
 	EventMetricsRefreshed     EventType = "metrics_refreshed"
 )
 
