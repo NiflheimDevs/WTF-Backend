@@ -1,0 +1,44 @@
+services:
+  db:
+    image: postgres:18
+    container_name: postgres_db
+    platform: linux/amd64
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db/migrations/001_create_initial_schema.up.sql:/docker-entrypoint-initdb.d/init_schema.sql
+      - postgres_data:/var/lib/postgresql
+  
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.Api
+    platform: linux/amd64
+    image: ghcr.io/niflheimdevs/wtf-backend
+    container_name: backend_app
+    restart: always
+    ports:
+      - "8080:8080" # Map host port to container port
+    env_file:
+      - ./.env
+    depends_on:
+      - db
+
+  api-document:
+    build:
+      context: .
+      dockerfile: Dockerfile.Document
+    platform: linux/amd64
+    image: ghcr.io/niflheimdevs/wtf-api-document
+    container_name: api-document
+    restart: always
+    ports:
+      - "3001:80"
+  
+volumes:
+  postgres_data:

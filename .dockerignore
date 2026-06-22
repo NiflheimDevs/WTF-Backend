@@ -1,0 +1,9 @@
+.git
+.vscode
+.DS_Store
+.env
+.env.*
+!.env.example
+bin
+tmp
+*.log

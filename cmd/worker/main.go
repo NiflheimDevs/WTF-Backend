@@ -46,11 +46,13 @@ func main() {
 
 	// Create workers
 	notifyWorker := queue.NewNotifyDispatcherWorker(auditRepo, logger)
+	requesterSMSWorker := queue.NewSendRequesterSMSWorker(auditRepo, logger)
 	metricsWorker := queue.NewRefreshMetricsWorker(requestRepo, metricsRepo, logger)
 
 	// Register workers with River
 	workers := river.NewWorkers()
 	river.AddWorker(workers, notifyWorker)
+	river.AddWorker(workers, requesterSMSWorker)
 	river.AddWorker(workers, metricsWorker)
 
 	// Create queue client
@@ -66,7 +68,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger.Info("worker started successfully", "workers", []string{"notify_dispatcher", "refresh_metrics"})
+	logger.Info("worker started successfully", "workers", []string{"notify_dispatcher", "send_requester_sms", "refresh_metrics"})
 
 	// Wait for interrupt signal
 	sigChan := make(chan os.Signal, 1)

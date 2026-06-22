@@ -74,6 +74,68 @@ func (w *NotifyDispatcherWorker) Work(ctx context.Context, job *river.Job[Notify
 	return nil
 }
 
+// SendRequesterSMSWorker handles requester SMS notification jobs
+type SendRequesterSMSWorker struct {
+	river.WorkerDefaults[SendRequesterSMSJobArgs]
+	auditRepo repository.AuditLogRepository
+	logger    *slog.Logger
+}
+
+// NewSendRequesterSMSWorker creates a new SendRequesterSMSWorker
+func NewSendRequesterSMSWorker(auditRepo repository.AuditLogRepository, logger *slog.Logger) *SendRequesterSMSWorker {
+	return &SendRequesterSMSWorker{
+		auditRepo: auditRepo,
+		logger:    logger,
+	}
+}
+
+// Work processes the requester SMS notification job
+func (w *SendRequesterSMSWorker) Work(ctx context.Context, job *river.Job[SendRequesterSMSJobArgs]) error {
+	args := job.Args
+
+	w.logger.Info("processing requester SMS job",
+		"request_id", args.RequestID,
+		"phone", args.Phone,
+		"status", args.Status,
+		"attempt", job.Attempt,
+	)
+
+	w.logger.Info("simulated requester SMS sent",
+		"request_id", args.RequestID,
+		"phone", args.Phone,
+		"message", fmt.Sprintf("Your water request status is now %s.", args.Status),
+	)
+
+	payload, err := json.Marshal(map[string]interface{}{
+		"request_id": args.RequestID,
+		"phone":      args.Phone,
+		"status":     args.Status,
+		"simulated":  true,
+		"timestamp":  time.Now(),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to marshal audit payload: %w", err)
+	}
+
+	auditLog := &domain.AuditLog{
+		EventType: domain.EventRequesterSMSSent,
+		RequestID: &args.RequestID,
+		Payload:   payload,
+		CreatedAt: time.Now(),
+	}
+
+	if err := w.auditRepo.Insert(ctx, auditLog); err != nil {
+		return fmt.Errorf("failed to insert audit log: %w", err)
+	}
+
+	w.logger.Info("requester SMS job completed",
+		"request_id", args.RequestID,
+		"audit_log_id", auditLog.ID,
+	)
+
+	return nil
+}
+
 // RefreshMetricsWorker handles metrics refresh jobs
 type RefreshMetricsWorker struct {
 	river.WorkerDefaults[RefreshMetricsJobArgs]

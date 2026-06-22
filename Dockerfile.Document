@@ -1,0 +1,19 @@
+# syntax=docker/dockerfile:1
+
+FROM --platform=$BUILDPLATFORM node:22-alpine AS builder
+
+WORKDIR /app
+
+ARG REDOC_CLI_VERSION=0.13.21
+
+COPY API-Document/openapi.yaml ./openapi.yaml
+
+RUN --mount=type=cache,target=/root/.npm \
+    npm install --global --no-audit --no-fund redoc-cli@${REDOC_CLI_VERSION} \
+    && redoc-cli build openapi.yaml --output index.html
+
+FROM nginx:1.29-alpine
+
+COPY --from=builder --chown=nginx:nginx /app/index.html /usr/share/nginx/html/index.html
+
+EXPOSE 80

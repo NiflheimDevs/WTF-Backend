@@ -57,17 +57,20 @@ func (r *RequestRepository) Create(ctx context.Context, req *domain.Request) err
 func (r *RequestRepository) FindByID(ctx context.Context, id uuid.UUID) (*domain.Request, error) {
 	query := `
 		SELECT 
-			id, region_id, need_type, quantity, contact_phone, note,
-			status, submitted_ip, submitted_user_agent,
-			dispatched_by, dispatched_at, created_at, updated_at
-		FROM requests
-		WHERE id = $1
+			req.id, req.region_id, reg.name_fa, reg.name_en, req.need_type, req.quantity,
+			req.contact_phone, req.note, req.status, req.submitted_ip, req.submitted_user_agent,
+			req.dispatched_by, req.dispatched_at, req.created_at, req.updated_at
+		FROM requests req
+		JOIN regions reg ON reg.id = req.region_id
+		WHERE req.id = $1
 	`
 
 	var req domain.Request
 	err := r.db.Pool.QueryRow(ctx, query, id).Scan(
 		&req.ID,
 		&req.RegionID,
+		&req.RegionNameFa,
+		&req.RegionNameEn,
 		&req.NeedType,
 		&req.Quantity,
 		&req.ContactPhone,
@@ -95,10 +98,11 @@ func (r *RequestRepository) FindByID(ctx context.Context, id uuid.UUID) (*domain
 func (r *RequestRepository) List(ctx context.Context, filters repository.RequestFilters) ([]*domain.Request, error) {
 	query := `
 		SELECT 
-			id, region_id, need_type, quantity, contact_phone, note,
-			status, submitted_ip, submitted_user_agent,
-			dispatched_by, dispatched_at, created_at, updated_at
-		FROM requests
+			req.id, req.region_id, reg.name_fa, reg.name_en, req.need_type, req.quantity,
+			req.contact_phone, req.note, req.status, req.submitted_ip, req.submitted_user_agent,
+			req.dispatched_by, req.dispatched_at, req.created_at, req.updated_at
+		FROM requests req
+		JOIN regions reg ON reg.id = req.region_id
 		WHERE 1=1
 	`
 
@@ -106,30 +110,30 @@ func (r *RequestRepository) List(ctx context.Context, filters repository.Request
 	argPos := 1
 
 	if filters.Status != nil {
-		query += fmt.Sprintf(" AND status = $%d", argPos)
+		query += fmt.Sprintf(" AND req.status = $%d", argPos)
 		args = append(args, *filters.Status)
 		argPos++
 	}
 
 	if filters.RegionID != nil {
-		query += fmt.Sprintf(" AND region_id = $%d", argPos)
+		query += fmt.Sprintf(" AND req.region_id = $%d", argPos)
 		args = append(args, *filters.RegionID)
 		argPos++
 	}
 
 	if filters.FromDate != nil {
-		query += fmt.Sprintf(" AND created_at >= $%d", argPos)
+		query += fmt.Sprintf(" AND req.created_at >= $%d", argPos)
 		args = append(args, *filters.FromDate)
 		argPos++
 	}
 
 	if filters.ToDate != nil {
-		query += fmt.Sprintf(" AND created_at <= $%d", argPos)
+		query += fmt.Sprintf(" AND req.created_at <= $%d", argPos)
 		args = append(args, *filters.ToDate)
 		argPos++
 	}
 
-	query += " ORDER BY created_at DESC"
+	query += " ORDER BY req.created_at DESC"
 
 	if filters.Limit > 0 {
 		query += fmt.Sprintf(" LIMIT $%d", argPos)
@@ -155,6 +159,8 @@ func (r *RequestRepository) List(ctx context.Context, filters repository.Request
 		err := rows.Scan(
 			&req.ID,
 			&req.RegionID,
+			&req.RegionNameFa,
+			&req.RegionNameEn,
 			&req.NeedType,
 			&req.Quantity,
 			&req.ContactPhone,

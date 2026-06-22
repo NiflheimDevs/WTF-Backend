@@ -29,6 +29,18 @@ func (RefreshMetricsJobArgs) Kind() string {
 	return "refresh_metrics"
 }
 
+// SendRequesterSMSJobArgs represents arguments for requester SMS notification job
+type SendRequesterSMSJobArgs struct {
+	RequestID uuid.UUID `json:"request_id"`
+	Phone     string    `json:"phone"`
+	Status    string    `json:"status"`
+}
+
+// Kind returns the job type identifier for River
+func (SendRequesterSMSJobArgs) Kind() string {
+	return "send_requester_sms"
+}
+
 // MarshalJSON implements custom JSON marshaling for NotifyDispatcherJobArgs
 func (args NotifyDispatcherJobArgs) MarshalJSON() ([]byte, error) {
 	return json.Marshal(struct {
@@ -96,5 +108,40 @@ func (args *RefreshMetricsJobArgs) UnmarshalJSON(data []byte) error {
 
 	args.Date = date
 	args.RegionID = regionID
+	return nil
+}
+
+// MarshalJSON implements custom JSON marshaling for SendRequesterSMSJobArgs
+func (args SendRequesterSMSJobArgs) MarshalJSON() ([]byte, error) {
+	return json.Marshal(struct {
+		RequestID string `json:"request_id"`
+		Phone     string `json:"phone"`
+		Status    string `json:"status"`
+	}{
+		RequestID: args.RequestID.String(),
+		Phone:     args.Phone,
+		Status:    args.Status,
+	})
+}
+
+// UnmarshalJSON implements custom JSON unmarshaling for SendRequesterSMSJobArgs
+func (args *SendRequesterSMSJobArgs) UnmarshalJSON(data []byte) error {
+	var temp struct {
+		RequestID string `json:"request_id"`
+		Phone     string `json:"phone"`
+		Status    string `json:"status"`
+	}
+	if err := json.Unmarshal(data, &temp); err != nil {
+		return err
+	}
+
+	requestID, err := uuid.Parse(temp.RequestID)
+	if err != nil {
+		return err
+	}
+
+	args.RequestID = requestID
+	args.Phone = temp.Phone
+	args.Status = temp.Status
 	return nil
 }
