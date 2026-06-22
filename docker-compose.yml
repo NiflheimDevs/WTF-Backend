@@ -19,7 +19,7 @@ services:
       context: .
       dockerfile: Dockerfile.Api
     platform: linux/amd64
-    image: registry.hamdocker.ir/samansayad93/wtf-backend
+    image: ghcr.io/niflheimdevs/wtf-backend
     container_name: backend_app
     restart: always
     ports:
