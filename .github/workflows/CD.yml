@@ -15,7 +15,7 @@ permissions:
   packages: write
 
 env:
-  DEPLOY_DIR: /home/ubuntu/Desktop/backend
+  DEPLOY_DIR: /home/debian/backend
   DOCKER_BUILDKIT: "1"
 
 jobs:
