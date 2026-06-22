@@ -34,7 +34,7 @@ services:
       context: .
       dockerfile: Dockerfile.Document
     platform: linux/amd64
-    image: registry.hamdocker.ir/samansayad93/wtf-api-document
+    image: ghcr.io/niflheimdevs/wtf-api-document
     container_name: api-document
     restart: always
     ports:

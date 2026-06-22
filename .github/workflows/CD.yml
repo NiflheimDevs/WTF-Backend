@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - feature/CICD
+      - fix/attempt2
 
 concurrency:
   group: cd-${{ github.ref }}
