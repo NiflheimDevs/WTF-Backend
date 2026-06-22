@@ -5,7 +5,7 @@ WORKDIR /app
 RUN go env -w GOPROXY=https://goproxy.io,direct
 
 COPY go.mod go.sum ./
-RUN go mod download
+RUN go mod download -x
 
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o /app/bin/worker ./cmd/worker
