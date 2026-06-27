@@ -41,6 +41,7 @@ func NewRouter(deps Dependencies, cfg RouterConfig) http.Handler {
 		r.Get("/regions", regionHandler.List)
 		r.With(rateLimiter.Middleware).Post("/requests", requestHandler.Create)
 		r.Post("/auth/login", authHandler.Login)
+		r.Get("/request/{id}", requestHandler.PublicDetail)
 
 		r.Group(func(r chi.Router) {
 			r.Use(middleware.Auth(deps.Auth))

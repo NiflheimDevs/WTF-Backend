@@ -135,6 +135,25 @@ func (h *RequestHandler) Detail(w http.ResponseWriter, r *http.Request) {
 	WriteJSON(w, http.StatusOK, detail)
 }
 
+func (h *RequestHandler) PublicDetail(w http.ResponseWriter, r *http.Request) {
+	id, ok := parseUUIDParam(w, r, "id")
+	if !ok {
+		return
+	}
+
+	detail, err := h.requests.PublicDetail(r.Context(), id)
+	if err != nil {
+		if errors.Is(err, service.ErrNotFound) {
+			WriteError(w, http.StatusNotFound, "not_found", "request not found", nil)
+			return
+		}
+		WriteError(w, http.StatusInternalServerError, "request_failed", "failed to load request", nil)
+		return
+	}
+
+	WriteJSON(w, http.StatusOK, detail)
+}
+
 func (h *RequestHandler) UpdateStatus(w http.ResponseWriter, r *http.Request) {
 	id, ok := parseUUIDParam(w, r, "id")
 	if !ok {
