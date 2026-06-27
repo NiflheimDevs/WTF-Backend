@@ -36,6 +36,19 @@ type RequestDetail struct {
 	AuditLog []*domain.AuditLog `json:"audit_log"`
 }
 
+type PublicRequestDetail struct {
+	ID                 uuid.UUID            `json:"id"`
+	RegionID           uuid.UUID            `json:"region_id"`
+	RegionNameFa       string               `json:"region_name_fa,omitempty"`
+	RegionNameEn       string               `json:"region_name_en,omitempty"`
+	NeedType           domain.NeedType      `json:"need_type"`
+	Quantity           int                  `json:"quantity"`
+	Status             domain.RequestStatus `json:"status"`
+	DispatchedAt       *time.Time           `json:"dispatched_at,omitempty"`
+	CreatedAt          time.Time            `json:"created_at"`
+	UpdatedAt          time.Time            `json:"updated_at"`
+}
+
 type RequestService struct {
 	requests repository.RequestRepository
 	regions  repository.RegionRepository
@@ -157,6 +170,28 @@ func (s *RequestService) Detail(ctx context.Context, id uuid.UUID) (*RequestDeta
 	}
 
 	return &RequestDetail{Request: req, AuditLog: logs}, nil
+}
+
+func (s *RequestService) PublicDetail(ctx context.Context, id uuid.UUID) (*PublicRequestDetail, error) {
+	req, err := s.requests.FindByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("%w: request", ErrNotFound)
+	}
+
+	pubReq := PublicRequestDetail{
+		ID: req.ID,
+		RegionID: req.RegionID,
+		RegionNameFa: req.RegionNameFa,
+		RegionNameEn: req.RegionNameEn,
+		NeedType: req.NeedType,
+		Quantity: req.Quantity,
+		Status: req.Status,
+		DispatchedAt: req.DispatchedAt,
+		CreatedAt: req.CreatedAt,
+		UpdatedAt: req.UpdatedAt,
+	}
+
+	return &pubReq, nil
 }
 
 func (s *RequestService) UpdateStatus(ctx context.Context, id uuid.UUID, status domain.RequestStatus, actorID uuid.UUID) (*domain.Request, error) {
